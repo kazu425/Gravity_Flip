@@ -3,17 +3,19 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     Rigidbody playRb;
-    public float moveSpeed = 5f;
-    public float jumppower = 5f;
+
+    public float moveForce = 20f;   // 加速力
+    public float maxSpeed = 7f;     // 最大速度
+    public float jumpPower = 5f;
 
     void Start()
     {
         playRb = GetComponent<Rigidbody>();
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        // --- 現在の重力方向 ---
+        // --- 重力方向 ---
         Vector3 gravityDir = Physics.gravity.normalized;
         Vector3 up = -gravityDir;
 
@@ -32,17 +34,31 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.W)) input += forward;
         if (Input.GetKey(KeyCode.S)) input -= forward;
 
-        // --- 水平速度 ---
-        Vector3 horizontalVel = input.normalized * moveSpeed;
+        // --- 現在の速度 ---
+        Vector3 vel = playRb.linearVelocity;
 
-        // --- 重力方向の速度成分は維持 ---
-        Vector3 verticalVel = Vector3.Project(playRb.linearVelocity, gravityDir);
+        // --- 入力がある場合：AddForce で加速 ---
+        if (input != Vector3.zero)
+        {
+            playRb.AddForce(input.normalized * moveForce, ForceMode.Acceleration);
+        }
+        else
+        {
+            // --- 入力ゼロ：水平速度だけ0にする ---
+            Vector3 verticalVel = Vector3.Project(vel, gravityDir);
+            playRb.linearVelocity = verticalVel;
+        }
 
-        // --- 合成して最終速度 ---
-        playRb.linearVelocity = horizontalVel + verticalVel;
+        // --- 最大速度制限（ワールド座標のまま） ---
+        if (playRb.linearVelocity.magnitude > maxSpeed)
+        {
+            playRb.linearVelocity = playRb.linearVelocity.normalized * maxSpeed;
+        }
 
         // --- ジャンプ ---
         if (Input.GetKeyDown(KeyCode.Space))
-            playRb.AddForce(up * jumppower, ForceMode.Impulse);
+        {
+            playRb.AddForce(up * jumpPower, ForceMode.Impulse);
+        }
     }
 }
