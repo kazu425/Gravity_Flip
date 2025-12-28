@@ -1,79 +1,72 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    Rigidbody playRb;
+    public float moveSpeed = 5f;
+    public float rotateSpeed = 720f;
+    public float jumpHeight = 2f;
 
-    public float moveForce = 20f;   // 加速力
-    public float maxSpeed = 7f;     // 最大速度
-    public float jumpPower = 5f;
+    public Vector3 gravityDir = Vector3.down;   // 重力方向
+    public float gravityStrength = 9.81f;       // 重力の大きさ
 
-    public float mouseSensitivity = 200f;
+    private CharacterController controller;
+    private Vector3 velocity;
+    private bool isGrounded;
 
     void Start()
     {
-        playRb = GetComponent<Rigidbody>();
-        Cursor.lockState = CursorLockMode.Locked;
-    }
-
-    void FixedUpdate()
-    {
-        // --- 重力方向 ---
-        Vector3 gravityDir = Physics.gravity.normalized;
-        Vector3 up = -gravityDir;
-
-        // --- カメラの向きに合わせた移動軸 ---
-        Transform cam = Camera.main.transform;
-
-        // カメラ forward を重力に対して水平に投影
-        Vector3 camForward = Vector3.ProjectOnPlane(cam.forward, gravityDir).normalized;
-        Vector3 camRight = Vector3.Cross(up, camForward).normalized;
-
-        // --- WASD 入力 ---
-        Vector3 input = Vector3.zero;
-        if (Input.GetKey(KeyCode.D)) input += camRight;
-        if (Input.GetKey(KeyCode.A)) input -= camRight;
-        if (Input.GetKey(KeyCode.W)) input += camForward;
-        if (Input.GetKey(KeyCode.S)) input -= camForward;
-
-        // --- 現在の速度 ---
-        Vector3 vel = playRb.linearVelocity;
-
-        // --- 入力がある場合：加速 ---
-        if (input != Vector3.zero)
-        {
-            playRb.AddForce(input.normalized * moveForce, ForceMode.Acceleration);
-        }
-        else
-        {
-            // 入力ゼロ：水平速度だけ0にする
-            Vector3 verticalVel = Vector3.Project(vel, gravityDir);
-            playRb.linearVelocity = verticalVel;
-        }
-
-        // --- 最大速度制限 ---
-        if (playRb.linearVelocity.magnitude > maxSpeed)
-        {
-            playRb.linearVelocity = playRb.linearVelocity.normalized * maxSpeed;
-        }
-
-        // --- ジャンプ ---
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            playRb.AddForce(up * jumpPower, ForceMode.Impulse);
-        }
+        controller = GetComponent<CharacterController>();
     }
 
     void Update()
     {
-        // --- マウスでプレイヤーを水平回転（Yaw） ---
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        // --- Ground Check ---
+        isGrounded = controller.isGrounded;
 
-        Vector3 gravityDir = Physics.gravity.normalized;
-        Vector3 up = -gravityDir;
+        if (isGrounded)
+        {
+            float downVel = Vector3.Dot(velocity, gravityDir);
+            if (downVel > 0)
+            {
+                velocity -= gravityDir * downVel;
+            }
+        }
 
-        // 重力方向を軸に回転
-        Quaternion rot = Quaternion.AngleAxis(mouseX, up);
-        transform.rotation = rot * transform.rotation;
+        // --- Movement Input (WASD のみ) ---
+        float h = 0f;
+        float v = 0f;
+
+        if (Input.GetKey(KeyCode.W)) v += 1f;
+        if (Input.GetKey(KeyCode.S)) v -= 1f;
+        if (Input.GetKey(KeyCode.D)) h += 1f;
+        if (Input.GetKey(KeyCode.A)) h -= 1f;
+
+        Vector3 camForward = Vector3.ProjectOnPlane(Camera.main.transform.forward, -gravityDir).normalized;
+        Vector3 camRight   = Vector3.ProjectOnPlane(Camera.main.transform.right,   -gravityDir).normalized;
+
+        Vector3 move = (camForward * v + camRight * h);
+        if (move.sqrMagnitude > 1f)
+            move.Normalize();
+
+        // --- Rotation ---
+        if (move.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(move, -gravityDir);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
+        }
+
+        // --- Jump ---
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity -= gravityDir * Mathf.Sqrt(jumpHeight * 2f * gravityStrength);
+        }
+
+        // --- Apply Gravity ---
+        velocity += gravityDir * gravityStrength * Time.deltaTime;
+
+        // --- Final Move ---
+        Vector3 finalMove = move * moveSpeed + velocity;
+        controller.Move(finalMove * Time.deltaTime);
     }
 }
