@@ -1,64 +1,58 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    Rigidbody playRb;
+    public float moveSpeed = 5f;
+    public float rotateSpeed = 720f;
+    public float jumpHeight = 2f;
+    public float gravity = -9.81f;
 
-    public float moveForce = 20f;   // 加速力
-    public float maxSpeed = 7f;     // 最大速度
-    public float jumpPower = 5f;
+    private CharacterController controller;
+    private Vector3 velocity;
+    private bool isGrounded;
 
     void Start()
     {
-        playRb = GetComponent<Rigidbody>();
+        controller = GetComponent<CharacterController>();
     }
 
-    void FixedUpdate()
+    void Update()
     {
-        // --- 重力方向 ---
-        Vector3 gravityDir = Physics.gravity.normalized;
-        Vector3 up = -gravityDir;
-
-        // --- 重力と平行でない基準軸 ---
-        Vector3 refAxis = (Mathf.Abs(Vector3.Dot(up, Vector3.forward)) > 0.9f)
-            ? Vector3.up
-            : Vector3.forward;
-
-        Vector3 right = Vector3.Cross(up, refAxis).normalized;
-        Vector3 forward = Vector3.Cross(right, up).normalized;
-
-        // --- WASD 入力 ---
-        Vector3 input = Vector3.zero;
-        if (Input.GetKey(KeyCode.D)) input += right;
-        if (Input.GetKey(KeyCode.A)) input -= right;
-        if (Input.GetKey(KeyCode.W)) input += forward;
-        if (Input.GetKey(KeyCode.S)) input -= forward;
-
-        // --- 現在の速度 ---
-        Vector3 vel = playRb.linearVelocity;
-
-        // --- 入力がある場合：AddForce で加速 ---
-        if (input != Vector3.zero)
+        // --- Ground Check ---
+        isGrounded = controller.isGrounded;
+        if (isGrounded && velocity.y < 0)
         {
-            playRb.AddForce(input.normalized * moveForce, ForceMode.Acceleration);
-        }
-        else
-        {
-            // --- 入力ゼロ：水平速度だけ0にする ---
-            Vector3 verticalVel = Vector3.Project(vel, gravityDir);
-            playRb.linearVelocity = verticalVel;
+            velocity.y = -2f; // 地面に張り付く感じに
         }
 
-        // --- 最大速度制限（ワールド座標のまま） ---
-        if (playRb.linearVelocity.magnitude > maxSpeed)
+        // --- Movement Input ---
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+
+        Vector3 move = new Vector3(horizontal, 0, vertical);
+
+        // カメラ基準の方向に変換
+        move = Camera.main.transform.TransformDirection(move);
+        move.y = 0f;
+
+        controller.Move(move * moveSpeed * Time.deltaTime);
+
+        // --- 回転（動いてるときだけ） ---
+        if (move.magnitude > 0.1f)
         {
-            playRb.linearVelocity = playRb.linearVelocity.normalized * maxSpeed;
+            Quaternion targetRotation = Quaternion.LookRotation(move);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
         }
 
-        // --- ジャンプ ---
-        if (Input.GetKeyDown(KeyCode.Space))
+        // --- Jump ---
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            playRb.AddForce(up * jumpPower, ForceMode.Impulse);
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+
+        // --- Apply Gravity ---
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
     }
 }
