@@ -2,26 +2,34 @@ using UnityEngine;
 
 public class GravityMouseLook : MonoBehaviour
 {
+    [Tooltip("上下回転を担当する CameraPivot を割り当ててください")]
+    public Transform cameraPivot;
+
+    [Tooltip("マウス感度")]
     public float sensitivity = 200f;
+
+    public float Pitch { get; private set; } = 0f;
 
     void Update()
     {
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
-        // 重力方向
+        // 重力方向（下）→ up ベクトル（上）
         Vector3 gravityDir = Physics.gravity.normalized;
         Vector3 up = -gravityDir;
 
-        // 重力に対して水平な回転軸（Y軸の代わり）
-        Vector3 refAxis = (Mathf.Abs(Vector3.Dot(up, Vector3.forward)) > 0.9f)
-            ? Vector3.up
-            : Vector3.forward;
+        // --- Yaw（左右回転） ---
+        transform.rotation = Quaternion.AngleAxis(mouseX, up) * transform.rotation;
 
-        Vector3 right = Vector3.Cross(up, refAxis).normalized;
-        Vector3 forward = Vector3.Cross(right, up).normalized;
+        // --- Pitch（上下回転） ---
+        Pitch -= mouseY;
+        Pitch = Mathf.Clamp(Pitch, -80f, 80f);
 
-        // プレイヤーを重力に対して水平に回転
-        Quaternion rotation = Quaternion.AngleAxis(mouseX, up);
-        transform.rotation = rotation * transform.rotation;
+        if (cameraPivot != null)
+        {
+            // 位置は絶対に触らない。localRotation だけ変更。
+            cameraPivot.localRotation = Quaternion.Euler(Pitch, 0f, 0f);
+        }
     }
 }
