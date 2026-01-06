@@ -37,6 +37,9 @@ public class PlayerMovement : NetworkBehaviour
 
     void Update()
     {
+         //なんかあれうん自分だけを動かすようにするやつらしい
+        if (!IsOwner) return;
+        
         // --- Ground Check ---
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
@@ -69,8 +72,7 @@ public class PlayerMovement : NetworkBehaviour
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        //なんかあれうん自分だけを動かすようにするやつらしい
-        if (!IsOwner) return;
+       
 
         // --- Apply Gravity ---
         velocity.y += gravity * Time.deltaTime;

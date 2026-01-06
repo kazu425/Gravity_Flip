@@ -38,6 +38,9 @@ public class RelayManager : MonoBehaviour
 
             NetworkManager.Singleton.StartHost();
 
+            // UI 切り替え
+            FindObjectOfType<UIManager>().OnConnected();
+
             return joinCode;
         }
         catch (System.Exception e)
@@ -68,6 +71,9 @@ public class RelayManager : MonoBehaviour
             );
 
             NetworkManager.Singleton.StartClient();
+            // UI 切り替え
+            FindObjectOfType<UIManager>().OnConnected();
+
 
             return true;
         }
