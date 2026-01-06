@@ -1,7 +1,8 @@
 using UnityEngine;
+using Unity.Netcode;
 
 [RequireComponent(typeof(CharacterController))]
-public class RunnerGrapple : MonoBehaviour
+public class RunnerGrapple : NetworkBehaviour
 {
     [Header("Grapple Settings")]
     public float grappleSpeed = 20f;     // 飛ぶ速さ
@@ -25,6 +26,9 @@ public class RunnerGrapple : MonoBehaviour
 
     void Update()
     {
+        //なんかあれうん自分だけを動かすようにするやつらしい
+        if (!IsOwner) return;
+        
         // --- クールタイム ---
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;

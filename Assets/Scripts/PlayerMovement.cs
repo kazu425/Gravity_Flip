@@ -1,7 +1,8 @@
 using UnityEngine;
+using Unity.Netcode;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     public float moveSpeed = 5f;
     public float rotateSpeed = 720f;
@@ -11,6 +12,23 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
+
+    public override void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            // シーンのメインカメラを取得
+            Camera mainCam = Camera.main;
+
+            // CameraFollow に自分を渡す
+            mainCam.GetComponent<CameraFollow>().target = this.transform;
+
+            // カーソルロック（必要なら）
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
+
 
     void Start()
     {
@@ -50,6 +68,9 @@ public class PlayerMovement : MonoBehaviour
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+
+        //なんかあれうん自分だけを動かすようにするやつらしい
+        if (!IsOwner) return;
 
         // --- Apply Gravity ---
         velocity.y += gravity * Time.deltaTime;

@@ -18,8 +18,7 @@ public class CameraFollow : MonoBehaviour
         rotationX = angles.y;
         rotationY = angles.x;
 
-        // カーソルをロック
-        Cursor.lockState = CursorLockMode.Locked;
+        
     }
 
     void LateUpdate()
