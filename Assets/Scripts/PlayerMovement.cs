@@ -8,7 +8,7 @@ public class PlayerMovement : NetworkBehaviour
     public bool isOni; // 仮：Inspector で手動で鬼設定してもOK
 
     public GameObject model; // 見た目だけ
-
+    public GameObject oniLabel;
     public float moveSpeed = 5f;
     public float rotateSpeed = 720f;
     public float jumpHeight = 2f;
@@ -17,6 +17,7 @@ public class PlayerMovement : NetworkBehaviour
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
+    private Animator anim;
 
     public override void OnNetworkSpawn()
     {
@@ -33,6 +34,10 @@ public class PlayerMovement : NetworkBehaviour
             isOni = false;
         }
         }
+
+         // 鬼ラベルの表示切り替え
+            oniLabel.SetActive(isOni);
+
 
         if (IsOwner)
         {
@@ -52,6 +57,8 @@ public class PlayerMovement : NetworkBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        anim = GetComponentInChildren<Animator>(); // Model の中に Animator がある場合
+
     }
 
     void Update()
@@ -63,11 +70,7 @@ public class PlayerMovement : NetworkBehaviour
 
         // 既存の移動・ジャンプの処理はそのまま下にあるとして…
 
-        // 左クリックで攻撃
-        if (isOni && Input.GetMouseButtonDown(0))
-        {
-         AttackServerRpc();
-     }
+        
 
         // ここに移動やジャンプの処理が続く
 
@@ -109,6 +112,28 @@ public class PlayerMovement : NetworkBehaviour
         // --- Apply Gravity ---
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+
+
+
+
+
+
+        //ここからアニメーションたち
+        float speed = new Vector3(horizontal, 0, vertical).magnitude;
+        anim.SetFloat("Speed", speed);
+
+        anim.SetBool("IsGrounded", isGrounded);
+
+        if (isOni && Input.GetMouseButtonDown(0))
+        {
+        AttackServerRpc();
+        anim.SetTrigger("Attack");
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+        anim.SetTrigger("Dodge");
+        }
     }
 
     [ServerRpc]
