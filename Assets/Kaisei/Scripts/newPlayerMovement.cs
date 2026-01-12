@@ -12,6 +12,11 @@ public class newPlayerMovement : NetworkBehaviour
     public GameObject model;
     public GameObject oniLabel;
 
+[Header("重力設定")]
+public Vector3 gravityDirection = Vector3.down;   // 重力方向
+public float gravityStrength = 9.81f;             // 重力の強さ
+
+
     [Header("移動設定")]
     public float moveSpeed = 5f;
     public float rotateSpeed = 720f;
@@ -92,41 +97,42 @@ public class newPlayerMovement : NetworkBehaviour
     // 通常移動
     // ============================
     void NormalMove()
+{
+    // ===== 接地判定 =====
+    isGrounded = controller.isGrounded;
+
+    // ===== 入力による移動 =====
+    float h = Input.GetAxis("Horizontal");
+    float v = Input.GetAxis("Vertical");
+
+    Vector3 move = new Vector3(h, 0, v);
+    move = Camera.main.transform.TransformDirection(move);
+    move = Vector3.ProjectOnPlane(move, gravityDirection); // ← 重力方向に合わせて地面に沿わせる
+
+    controller.Move(move * moveSpeed * Time.deltaTime);
+
+    // ===== 回転 =====
+    if (move.magnitude > 0.1f)
     {
-        isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0)
-            velocity.y = -2f;
-
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-
-        Vector3 move = new Vector3(h, 0, v);
-        move = Camera.main.transform.TransformDirection(move);
-        move.y = 0f;
-
-        controller.Move(move * moveSpeed * Time.deltaTime);
-
-        if (move.magnitude > 0.1f)
-        {
-            Quaternion rot = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, rotateSpeed * Time.deltaTime);
-        }
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
-
-        anim.SetFloat("Speed", move.magnitude);
-        anim.SetBool("IsGrounded", isGrounded);
-
-        if (isOni.Value && Input.GetMouseButtonDown(0))
-            AttackServerRpc();
-
-        if (Input.GetMouseButtonDown(1) && dodgeCooldownTimer <= 0f)
-            StartDodge();
+        Quaternion rot = Quaternion.LookRotation(move);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, rotateSpeed * Time.deltaTime);
     }
+
+    // ======== 重力処理（ここに入れる）========
+    if (isGrounded && Vector3.Dot(velocity, gravityDirection) > 0)
+    {
+        velocity = Vector3.ProjectOnPlane(velocity, gravityDirection);
+    }
+
+    if (Input.GetButtonDown("Jump") && isGrounded)
+    {
+        velocity += -gravityDirection * Mathf.Sqrt(jumpHeight * 2f * gravityStrength);
+    }
+
+    velocity += gravityDirection * gravityStrength * Time.deltaTime;
+
+    controller.Move(velocity * Time.deltaTime);
+}
 
     // ============================
     // ドッジ
