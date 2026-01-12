@@ -6,7 +6,9 @@ using System.Collections;
 public class newPlayerMovement : NetworkBehaviour
 {
     [Header("鬼ごっこ設定")]
-    public bool isOni;
+    public NetworkVariable<bool> isOni = new(false);
+    public NetworkVariable<bool> isDead = new(false);
+
     public GameObject model;
     public GameObject oniLabel;
 
@@ -21,64 +23,68 @@ public class newPlayerMovement : NetworkBehaviour
     public float dodgeDuration = 0.25f;
     public float dodgeCooldown = 3f;
 
-    private float dodgeTimer = 0f;
-    private float dodgeCooldownTimer = 0f;
-    private bool isDodging = false;
-    private Vector3 dodgeDirection;
+    float dodgeTimer;
+    float dodgeCooldownTimer;
+    bool isDodging;
+    Vector3 dodgeDirection;
 
-    private CharacterController controller;
-    private Vector3 velocity;
-    private bool isGrounded;
+    CharacterController controller;
+    Vector3 velocity;
+    bool isGrounded;
+    Animator anim;
 
-    private Animator anim;
-
+    // ============================
+    // Network Spawn
+    // ============================
     public override void OnNetworkSpawn()
     {
+        controller = GetComponent<CharacterController>();
+        anim = GetComponentInChildren<Animator>();
+
         if (IsServer)
         {
-            if (IsHost)
-            {
-                isOni = true;
-                Debug.Log("[Server] Host を鬼に設定したよ");
-            }
-            else
-            {
-                isOni = false;
-            }
+            isOni.Value = IsHost;
         }
 
-        oniLabel.SetActive(isOni);
+        oniLabel.SetActive(isOni.Value);
 
         if (IsOwner)
         {
-            Camera.main.GetComponent<CameraFollow>().target = this.transform;
+            Camera.main.GetComponent<CameraFollow>().target = transform;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
     }
 
-    void Start()
-    {
-        controller = GetComponent<CharacterController>();
-        anim = GetComponentInChildren<Animator>();
-    }
-
+    // ============================
+    // Update
+    // ============================
     void Update()
     {
         if (!IsOwner) return;
 
-        // --- クールタイム更新 ---
+        // ---- 死亡中は完全停止 ----
+        if (isDead.Value)
+        {
+            controller.enabled = false;
+            anim.SetFloat("Speed", 0);
+            return;
+        }
+        else if (!controller.enabled)
+        {
+            controller.enabled = true;
+            ResetCamera();
+        }
+
         if (dodgeCooldownTimer > 0f)
             dodgeCooldownTimer -= Time.deltaTime;
 
-        // --- ドッジ中なら専用処理 ---
         if (isDodging)
         {
             DodgeMove();
-            return; // ← 通常移動は止める
+            return;
         }
 
-        // --- 通常移動 ---
         NormalMove();
     }
 
@@ -87,70 +93,57 @@ public class newPlayerMovement : NetworkBehaviour
     // ============================
     void NormalMove()
     {
-        // --- Ground Check ---
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        // --- Movement Input ---
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
 
-        Vector3 move = new Vector3(horizontal, 0, vertical);
+        Vector3 move = new Vector3(h, 0, v);
         move = Camera.main.transform.TransformDirection(move);
         move.y = 0f;
 
         controller.Move(move * moveSpeed * Time.deltaTime);
 
-        // --- Rotation ---
         if (move.magnitude > 0.1f)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
+            Quaternion rot = Quaternion.LookRotation(move);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, rotateSpeed * Time.deltaTime);
         }
 
-        // --- Jump ---
         if (Input.GetButtonDown("Jump") && isGrounded)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
-        // --- Gravity ---
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
 
-        // --- Animation ---
         anim.SetFloat("Speed", move.magnitude);
         anim.SetBool("IsGrounded", isGrounded);
 
-        // --- Attack ---
-        if (isOni && Input.GetMouseButtonDown(0))
-        {
+        if (isOni.Value && Input.GetMouseButtonDown(0))
             AttackServerRpc();
-            anim.SetTrigger("Attack");
-        }
 
-        // --- Dodge ---
         if (Input.GetMouseButtonDown(1) && dodgeCooldownTimer <= 0f)
-        {
             StartDodge();
-        }
     }
 
     // ============================
-    // ドッジ開始
+    // ドッジ
     // ============================
     void StartDodge()
     {
-        dodgeDirection = Camera.main.transform.forward.normalized;
+        dodgeDirection = Camera.main.transform.forward;
+        dodgeDirection.y = 0f;
+        dodgeDirection.Normalize();
+
         dodgeTimer = dodgeDuration;
-        isDodging = true;
         dodgeCooldownTimer = dodgeCooldown;
+        isDodging = true;
 
         anim.SetTrigger("Dodge");
     }
 
-    // ============================
-    // ドッジ移動
-    // ============================
     void DodgeMove()
     {
         if (dodgeTimer > 0f)
@@ -165,61 +158,50 @@ public class newPlayerMovement : NetworkBehaviour
     }
 
     // ============================
-    // 攻撃 RPC
+    // 攻撃（Server）
     // ============================
     [ServerRpc]
-    private void AttackServerRpc()
+    void AttackServerRpc()
     {
         float range = 3f;
-        Vector3 center = transform.position;
-
-        Collider[] hits = Physics.OverlapSphere(center, range);
+        Collider[] hits = Physics.OverlapSphere(transform.position, range);
 
         foreach (var hit in hits)
         {
-            newPlayerMovement player = hit.GetComponent<newPlayerMovement>();
-
-            if (player != null && player != this)
+            newPlayerMovement target = hit.GetComponent<newPlayerMovement>();
+            if (target != null && target != this && !target.isDead.Value)
             {
-                Debug.Log($"[Server] {player.OwnerClientId} を攻撃範囲内で発見");
-
-                player.KillClientRpc(new ClientRpcParams
-                {
-                    Send = new ClientRpcSendParams
-                    {
-                        TargetClientIds = new ulong[] { player.OwnerClientId }
-                    }
-                });
+                target.Kill();
             }
         }
     }
 
     // ============================
-    // Kill RPC
+    // 死亡 & 復活（Server主導）
     // ============================
-    [ClientRpc]
-    public void KillClientRpc(ClientRpcParams rpcParams = default)
+    void Kill()
     {
-        Debug.Log("[Client] やられた！");
-        model.SetActive(false);
-
-        if (IsOwner)
-            StartCoroutine(Respawn());
+        isDead.Value = true;
+        StartCoroutine(RespawnRoutine());
     }
 
-    // ============================
-    // Respawn
-    // ============================
-    private IEnumerator Respawn()
+    IEnumerator RespawnRoutine()
     {
         yield return new WaitForSeconds(3f);
 
-        model.SetActive(true);
-        yield return null;
-
         transform.position = new Vector3(0, 1, 0);
+        velocity = Vector3.zero;
 
-        if (IsOwner)
-            Camera.main.GetComponent<CameraFollow>().SnapToTarget();
+        isDead.Value = false;
+    }
+
+    // ============================
+    // Camera Reset
+    // ============================
+    void ResetCamera()
+    {
+        CameraFollow cam = Camera.main.GetComponent<CameraFollow>();
+        cam.target = transform;
+        cam.SnapToTarget();
     }
 }
