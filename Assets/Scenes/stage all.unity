@@ -705,6 +705,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleWASDMove
   moveSpeed: 20
+  jumpPower: 3.6
+  gravity: -19.62
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
