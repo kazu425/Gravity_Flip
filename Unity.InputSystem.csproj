@@ -235,16 +235,16 @@
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\InputControlExtensions.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\InputProcessor.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Actions\Interactions\SlowTapInteraction.cs" />
-    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\Processors\NormalizeVector2Processor.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Remote\InputRemoting.cs" />
+    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\Processors\NormalizeVector2Processor.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\Dialog.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Utilities\PrimitiveValue.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\ControlPicker\InputControlDropdownItem.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\InputDiagnostics.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Commands\QueryKeyboardLayoutCommand.cs" />
-    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Actions\Composites\Vector2Composite.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\Debugger\InputLatencyCalculator.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Commands\EnableIMECompositionCommand.cs" />
+    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Actions\Composites\Vector2Composite.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\IInputRuntime.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\XR\Haptics\BufferedRumble.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\PlayerInput\PlayerInputManagerEditor.cs" />
@@ -281,8 +281,8 @@
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Utilities\DynamicBitfield.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\UITKAssetEditor\StateContainer.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Actions\Composites\OneModifierComposite.cs" />
-    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\PropertyDrawers\InputActionReferenceSearchProviders.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Utilities\DisplayStringFormatAttribute.cs" />
+    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\PropertyDrawers\InputActionReferenceSearchProviders.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\Processors\CompensateRotationProcessor.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\Settings\InputSettingsProvider.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\State\InputState.cs" />
@@ -339,8 +339,8 @@
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\Internal\AdvancedDropdown\AdvancedDropdownGUI.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Actions\InputActionAsset.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\XInput\XInputController.cs" />
-    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\UI\TrackedDeviceRaycaster.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\Debugger\InputDeviceDebuggerWindow.cs" />
+    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\UI\TrackedDeviceRaycaster.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\PropertyDrawers\InputActionReferencePropertyDrawer.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Utilities\CSharpCodeHelpers.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\UITKAssetEditor\Views\ViewBase.cs" />
@@ -395,8 +395,8 @@
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Controls\DeltaControl.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Plugins\UI\ExtendedSubmitCancelEventData.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Sensor.cs" />
-    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Haptics\DualMotorRumbleCommand.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\ControlPicker\InputControlPathEditor.cs" />
+    <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Devices\Haptics\DualMotorRumbleCommand.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Events\TextEvent.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\AssetImporter\InputActionImporter.cs" />
     <Compile Include="Library\PackageCache\com.unity.inputsystem@02433b2481ab\InputSystem\Editor\UITKAssetEditor\Views\ActionMapsView.cs" />
@@ -1010,6 +1010,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>Library\PackageCache\com.unity.services.wire@9a73acde80cc\Plugins\websocket-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualScripting.YamlDotNet">
       <HintPath>Library\PackageCache\com.unity.visualscripting@191c0d7e3b69\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
       <Private>False</Private>
@@ -1052,6 +1056,10 @@
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@191c0d7e3b69\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.TextureAssets">

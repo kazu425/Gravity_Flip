@@ -84,8 +84,8 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\QuaternionPropertyDrawer.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\Lighting\ProbeVolume\ProbeVolumeResourceStripper.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\RenderGraph\RenderGraphEditorRemoteDebugSession.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\PropertyFetcher.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\Lighting\LightAnchorEditorTool.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\PropertyFetcher.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\Analytics\VolumeProfileUsageAnalytic.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\LookDev\CameraController.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@7e63c2374bcc\Editor\Lighting\ProbeVolume\ProbeVolumeBakingSetEditor.cs" />
@@ -848,6 +848,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>Library\PackageCache\com.unity.services.wire@9a73acde80cc\Plugins\websocket-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualScripting.YamlDotNet">
       <HintPath>Library\PackageCache\com.unity.visualscripting@191c0d7e3b69\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
       <Private>False</Private>
@@ -890,6 +894,10 @@
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@191c0d7e3b69\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.TextureAssets">
