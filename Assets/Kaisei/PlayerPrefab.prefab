@@ -204,8 +204,8 @@ GameObject:
   - component: {fileID: 5666082721274749378}
   - component: {fileID: -5670326872779429481}
   - component: {fileID: -4766511366178863058}
-  - component: {fileID: 8549987848682344035}
   - component: {fileID: 8405629677642242415}
+  - component: {fileID: 1932640380318397433}
   m_Layer: 0
   m_Name: PlayerPrefab
   m_TagString: Untagged
@@ -248,13 +248,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 1.6
-  m_Radius: 0.5
+  m_Height: 1.7
+  m_Radius: 0.35
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.02
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.8, z: 0}
+  m_Center: {x: 0, y: 0.85, z: 0}
 --- !u!114 &-5670326872779429481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,29 +326,6 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!136 &8549987848682344035
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8156670204559970725}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 1.6
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &8405629677642242415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -373,10 +350,29 @@ MonoBehaviour:
   moveSpeed: 5
   rotateSpeed: 720
   jumpHeight: 2
-  gravity: -9.81
   dodgeSpeed: 40
   dodgeDuration: 0.25
   dodgeCooldown: 3
+  velocity: {x: 0, y: 0, z: 0}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  groundCheckDistance: 0.2
+  groundCheckRadius: 0.05
+  groundSnapDistance: 0.05
+--- !u!114 &1932640380318397433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8156670204559970725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 245af7d9e31e4e14799361a95b2067bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GravityChanger
+  player: {fileID: 8405629677642242415}
 --- !u!1 &8921767248899663608
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,6 +533,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 89e500793e6983a4db4f2370955bd7f8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 89e500793e6983a4db4f2370955bd7f8, type: 3}
+      propertyPath: m_ConstrainProportionsScale
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -6776246095338746148, guid: 89e500793e6983a4db4f2370955bd7f8, type: 3}

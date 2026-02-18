@@ -27,11 +27,14 @@ public class GravityChanger : MonoBehaviour
 
     void SetGravity(Vector3 dir)
     {
-        // 正規化して重力方向を更新
+        // ③ 重力方向を更新
         player.gravityDirection = dir.normalized;
 
-        // 重力の強さを設定
-        player.gravityStrength = 9.81f;
+        // ① プレイヤーの向きを重力方向に合わせる
+        player.transform.up = -player.gravityDirection;
+
+        // ② velocity を重力方向に合わせて再計算
+        player.velocity = Vector3.Project(player.velocity, player.gravityDirection);
 
         Debug.Log("Gravity changed to: " + player.gravityDirection);
     }

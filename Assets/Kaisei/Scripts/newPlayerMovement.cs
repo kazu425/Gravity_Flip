@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
+using NUnit.Framework;
 
 [RequireComponent(typeof(CharacterController))]
 public class newPlayerMovement : NetworkBehaviour
@@ -12,16 +13,14 @@ public class newPlayerMovement : NetworkBehaviour
     public GameObject model;
     public GameObject oniLabel;
 
-[Header("重力設定")]
-public Vector3 gravityDirection = Vector3.down;   // 重力方向
-public float gravityStrength = 9.81f;             // 重力の強さ
-
+    [Header("重力設定")]
+    public Vector3 gravityDirection = Vector3.down; // GravityChanger から変更される
+    public float gravityStrength = 9.81f;
 
     [Header("移動設定")]
     public float moveSpeed = 5f;
     public float rotateSpeed = 720f;
     public float jumpHeight = 2f;
-    public float gravity = -9.81f;
 
     [Header("ドッジ設定")]
     public float dodgeSpeed = 20f;
@@ -34,7 +33,7 @@ public float gravityStrength = 9.81f;             // 重力の強さ
     Vector3 dodgeDirection;
 
     CharacterController controller;
-    Vector3 velocity;
+    public Vector3 velocity; // GravityChanger から触るので public
     bool isGrounded;
     Animator anim;
 
@@ -60,87 +59,161 @@ public float gravityStrength = 9.81f;             // 重力の強さ
             Cursor.visible = false;
         }
     }
+     // ============================
+    // 接地判定（重力方向対応）
+    // ============================
+    // ===== 接地判定用設定 =====
+[SerializeField] LayerMask groundMask = ~0;        // 地面レイヤーだけに絞る（必要に応じてInspectorで設定）
+[SerializeField] float groundCheckDistance = 0.2f; // 足元からキャストする最大距離（短めが安定）
+[SerializeField] float groundSnapDistance = 0.05f; // 微小な浮きを吸収する貼り付き距離（任意）
+
+   bool CheckGround()
+{
+    if (controller == null) controller = GetComponent<CharacterController>();
+
+    Vector3 gdir = gravityDirection.normalized; // 下（足側）
+    float radius = controller.radius;
+    float height = Mathf.Max(controller.height, radius * 2f);
+    float skin   = controller.skinWidth;
+
+    Vector3 center = controller.bounds.center;
+
+    // 頭側(top)・足側(bottom)を gdir 基準で定義
+    Vector3 top    = center - gdir * (height * 0.5f - radius - skin);
+    Vector3 bottom = center + gdir * (height * 0.5f - radius - skin);
+
+    // 自カプセルとの初期重なり回避のため、キャスト方向と逆に少し戻す
+    const float castBack = 0.02f;
+    Vector3 p1 = top    - gdir * castBack;
+    Vector3 p2 = bottom - gdir * castBack;
+
+    bool hit = Physics.CapsuleCast(
+        p1,
+        p2,
+        radius * 0.95f,
+        gdir,                               // 下向きへキャスト
+        out RaycastHit hitInfo,
+        groundCheckDistance,
+        groundMask,
+        QueryTriggerInteraction.Ignore
+    );
+
+    // 斜面が急すぎる場合は接地扱いしない（任意、必要なら有効）
+    if (hit)
+    {
+        float slope = Vector3.Angle(hitInfo.normal, -gdir); // 地面法線と“上向き”の角度
+        if (slope > controller.slopeLimit + 0.5f)
+            hit = false;
+    }
+
+    // スナップ（上向きに飛んでない時だけ）
+    // velocity の“下向き成分”がほぼゼロ以上（= 上昇していない）なら吸着
+    if (hit && Vector3.Dot(velocity, -gdir) <= 0.01f)
+    {
+        float gap = hitInfo.distance;
+        if (gap > 0f && gap < groundSnapDistance)
+            controller.Move(gdir * gap); // 微小距離なので 2 回目の Move でも実害は小さい
+    }
+
+    return hit;
+}
+
 
     // ============================
     // Update
     // ============================
-    void Update()
+   void Update()
+{
+    if (!IsOwner) return;
+
+    if (isDead.Value)
     {
-        if (!IsOwner) return;
-
-        // ---- 死亡中は完全停止 ----
-        if (isDead.Value)
-        {
-            controller.enabled = false;
-            anim.SetFloat("Speed", 0);
-            return;
-        }
-        else if (!controller.enabled)
-        {
-            controller.enabled = true;
-            ResetCamera();
-        }
-
-        if (dodgeCooldownTimer > 0f)
-            dodgeCooldownTimer -= Time.deltaTime;
-
-        if (isDodging)
-        {
-            DodgeMove();
-            return;
-        }
-
-        NormalMove();
+        controller.enabled = false;
+        anim.SetFloat("Speed", 0);
+        return;
+    }
+    else if (!controller.enabled)
+    {
+        controller.enabled = true;
+        ResetCamera();
     }
 
-    // ============================
-    // 通常移動
-    // ============================
-    void NormalMove()
-{
-    // ===== 接地判定 =====
-    isGrounded = controller.isGrounded;
+    // ★ 先に接地判定（スナップ込み）
+    isGrounded = CheckGround();
 
-    // ===== 入力による移動 =====
+    if (dodgeCooldownTimer > 0f)
+        dodgeCooldownTimer -= Time.deltaTime;
+
+    if (isDodging)
+    {
+        DodgeMove();
+        return;
+    }
+
+    NormalMove();
+
+    // ★ Move 後にもう一度接地判定（位置が変わるため）
+    isGrounded = CheckGround();
+
+    if (isGrounded)
+    {
+        Debug.Log(isGrounded);
+    }
+}
+
+    
+    // ============================
+    // 通常移動（重力方向対応）
+    // ============================
+   void NormalMove()
+{
+    // ===== 入力 =====
     float h = Input.GetAxis("Horizontal");
     float v = Input.GetAxis("Vertical");
 
     Vector3 move = new Vector3(h, 0, v);
     move = Camera.main.transform.TransformDirection(move);
-    move = Vector3.ProjectOnPlane(move, gravityDirection); // ← 重力方向に合わせて地面に沿わせる
-
-    controller.Move(move * moveSpeed * Time.deltaTime);
+    move = Vector3.ProjectOnPlane(move, gravityDirection.normalized); // 正規化して使う
+    move.Normalize();
 
     // ===== 回転 =====
-    if (move.magnitude > 0.1f)
+    if (move.sqrMagnitude > 0.01f)
     {
-        Quaternion rot = Quaternion.LookRotation(move);
+        Quaternion rot = Quaternion.LookRotation(move, -gravityDirection);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, rotateSpeed * Time.deltaTime);
     }
 
-    // ======== 重力処理（ここに入れる）========
-    if (isGrounded && Vector3.Dot(velocity, gravityDirection) > 0)
+    Vector3 gdir = gravityDirection.normalized;
+
+    // ===== 接地中の下向き速度をクリア（重力方向成分のみ）=====
+    if (isGrounded)
     {
-        velocity = Vector3.ProjectOnPlane(velocity, gravityDirection);
+        float downSpeed = Vector3.Dot(velocity, gdir);
+        if (downSpeed > 0f)
+            velocity -= Vector3.Project(velocity, gdir);
     }
 
+    // ===== ジャンプ =====
     if (Input.GetButtonDown("Jump") && isGrounded)
     {
-        velocity += -gravityDirection * Mathf.Sqrt(jumpHeight * 2f * gravityStrength);
+        velocity += -gdir * Mathf.Sqrt(jumpHeight * 2f * gravityStrength);
+        isGrounded = false; // 直後は空中
     }
 
-    velocity += gravityDirection * gravityStrength * Time.deltaTime;
+    // ===== 重力 =====
+    velocity += gdir * gravityStrength * Time.deltaTime;
 
-    controller.Move(velocity * Time.deltaTime);
+    // ===== 実移動（Move は 1 回だけ）=====
+    Vector3 finalMove = move * moveSpeed + velocity;
+    controller.Move(finalMove * Time.deltaTime);
 }
-
     // ============================
     // ドッジ
     // ============================
     void StartDodge()
     {
         dodgeDirection = Camera.main.transform.forward;
-        dodgeDirection.y = 0f;
+        dodgeDirection = Vector3.ProjectOnPlane(dodgeDirection, gravityDirection);
         dodgeDirection.Normalize();
 
         dodgeTimer = dodgeDuration;
@@ -183,7 +256,7 @@ public float gravityStrength = 9.81f;             // 重力の強さ
     }
 
     // ============================
-    // 死亡 & 復活（Server主導）
+    // 死亡 & 復活
     // ============================
     void Kill()
     {
