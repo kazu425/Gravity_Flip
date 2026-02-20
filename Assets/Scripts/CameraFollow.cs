@@ -35,4 +35,21 @@ public class CameraFollow : MonoBehaviour
         transform.position = desiredPosition + new Vector3(0, offset.y, 0);
         transform.LookAt(target.position + Vector3.up * 1.5f);
     }
+
+    public void SnapToTarget()
+    {
+    if (!target) return;
+
+    // カメラの回転をターゲット基準にリセット
+    rotationX = target.eulerAngles.y;
+    rotationY = 0f;
+
+    Quaternion rotation = Quaternion.Euler(rotationY, rotationX, 0);
+
+    Vector3 desiredPosition = target.position - (rotation * Vector3.forward * distance);
+    transform.position = desiredPosition + new Vector3(0, offset.y, 0);
+
+    transform.LookAt(target.position + Vector3.up * 1.5f);
+    }
 }
+

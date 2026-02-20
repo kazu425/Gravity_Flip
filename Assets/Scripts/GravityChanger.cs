@@ -2,40 +2,40 @@ using UnityEngine;
 
 public class GravityChanger : MonoBehaviour
 {
+    public newPlayerMovement player; // Inspector でプレイヤーをセット
+
     void Update()
     {
-        // --- 重力方向切り替え ---
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-            ChangeGravity(new Vector3(0, 9.81f, 0));
+        if (Input.GetKeyDown(KeyCode.Z))
+            SetGravity(new Vector3(0, 1, 0));
 
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-            ChangeGravity(new Vector3(0, -9.81f, 0));
+        if (Input.GetKeyDown(KeyCode.X))
+            SetGravity(new Vector3(0, -1, 0));
 
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-            ChangeGravity(new Vector3(9.81f, 0, 0));
+        if (Input.GetKeyDown(KeyCode.C))
+            SetGravity(new Vector3(1, 0, 0));
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-            ChangeGravity(new Vector3(-9.81f, 0, 0));
+        if (Input.GetKeyDown(KeyCode.V))
+            SetGravity(new Vector3(-1, 0, 0));
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-            ChangeGravity(new Vector3(0, 0, 9.81f));
+        if (Input.GetKeyDown(KeyCode.B))
+            SetGravity(new Vector3(0, 0, 1));
 
-        if (Input.GetKeyDown(KeyCode.RightShift))
-            ChangeGravity(new Vector3(0, 0, -9.81f));
+        if (Input.GetKeyDown(KeyCode.N))
+            SetGravity(new Vector3(0, 0, -1));
     }
 
-    void ChangeGravity(Vector3 newGravity)
+    void SetGravity(Vector3 dir)
     {
-        // --- 重力方向を変更 ---
-        Physics.gravity = newGravity;
+        // ③ 重力方向を更新
+        player.gravityDirection = dir.normalized;
 
-        // --- シーン内のすべての Rigidbody を取得 ---
-        Rigidbody[] bodies = FindObjectsOfType<Rigidbody>();
+        // ① プレイヤーの向きを重力方向に合わせる
+        player.transform.up = -player.gravityDirection;
 
-        foreach (var rb in bodies)
-        {
-            // --- 速度を保持（再投影を防ぐ）---
-            rb.linearVelocity = rb.linearVelocity;
-        }
+        // ② velocity を重力方向に合わせて再計算
+        player.velocity = Vector3.Project(player.velocity, player.gravityDirection);
+
+        Debug.Log("Gravity changed to: " + player.gravityDirection);
     }
 }

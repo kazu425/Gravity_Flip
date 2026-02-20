@@ -2,76 +2,124 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Net;
-using System.Net.Sockets;
+using System.Threading.Tasks;
 
 public class NetworkUI : MonoBehaviour
 {
-    public GameObject uiRoot;          // Canvas 全体
-    public InputField ipInputField;    // Client が入力する IP
-    public Text ipDisplayText;         // Host の IP を表示する Text
+    [Header("UI References")]
+    [SerializeField] private InputField joinCodeInput;   // JoinCode 入力欄
+    [SerializeField] private Text       joinCodeDisplay; // Host が生成した JoinCode 表示欄
 
-    public void StartHost()
+    [SerializeField] private Button hostButton;
+    [SerializeField] private Button joinButton;
+
+    // 任意：ステータス表示（別テキストがあると便利）
+    [SerializeField] private Text statusText;
+
+    private UIManager _uiManager;
+
+    private void Awake()
     {
-        // Host のローカルIPを自動取得
-        string hostIP = GetLocalIPAddress();
+        _uiManager = FindObjectOfType<UIManager>();
 
-        // UI を消す前に表示だけ更新
-        if (ipDisplayText != null)
+        if (hostButton == null || joinButton == null)
+            Debug.LogWarning("[NetworkUI] Buttons がインスペクタで未設定です。");
+        if (joinCodeInput == null || joinCodeDisplay == null)
+            Debug.LogWarning("[NetworkUI] InputField/Text がインスペクタで未設定です。");
+        if (_uiManager == null)
+            Debug.LogWarning("[NetworkUI] シーン内に UIManager が見つかりません。");
+    }
+
+    private void Start()
+    {
+        hostButton?.onClick.AddListener(OnHostClicked);
+        joinButton?.onClick.AddListener(OnJoinClicked);
+    }
+
+    private async void OnHostClicked()
+    {
+        SetInteractable(false);
+        SetStatus("部屋を作成中…");
+
+        try
         {
-            ipDisplayText.text = "Your IP: " + hostIP;
-        }
+            string joinCode = await RelayManager.Instance.CreateRelayRoom();
 
-        // UI を先に消す（InputField が破棄される前に処理済み）
-        HideUI();
-
-        // Transport に設定
-        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.ConnectionData.Address = hostIP;
-
-        Debug.Log("Host IP: " + hostIP);
-
-        // Host 開始
-        NetworkManager.Singleton.StartHost();
-    }
-
-    public void StartClient()
-    {
-        // UI が消える前に IP を取得
-        string ip = ipInputField.text;
-
-        // UI を先に消す
-        HideUI();
-
-        // Transport に設定
-        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.ConnectionData.Address = ip;
-
-        Debug.Log("Client connecting to: " + ip);
-
-        // Client 開始
-        NetworkManager.Singleton.StartClient();
-    }
-
-    void HideUI()
-    {
-        if (uiRoot != null)
-            uiRoot.SetActive(false);
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
-    // Host のローカルIPv4を取得
-    public static string GetLocalIPAddress()
-    {
-        foreach (var ni in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
-        {
-            if (ni.AddressFamily == AddressFamily.InterNetwork)
+            if (!string.IsNullOrEmpty(joinCode))
             {
-                return ni.ToString(); // 例: 192.168.0.12
+                if (joinCodeDisplay) joinCodeDisplay.text = $"Join Code: {joinCode}";
+                SetStatus("部屋を作成しました。参加者を待機中…");
+                _uiManager?.OnConnected(); // 画面切替など
+            }
+            else
+            {
+                if (joinCodeDisplay) joinCodeDisplay.text = "部屋の作成に失敗しました";
+                SetStatus("作成に失敗しました。");
             }
         }
-        return "127.0.0.1"; // fallback
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[NetworkUI] Host 失敗: {ex}");
+            if (joinCodeDisplay) joinCodeDisplay.text = "部屋の作成でエラーが発生しました";
+            SetStatus("作成中にエラーが発生しました。");
+        }
+        finally
+        {
+            SetInteractable(true);
+        }
+    }
+
+    private async void OnJoinClicked()
+    {
+        SetInteractable(false);
+        SetStatus("参加中…");
+
+        try
+        {
+            string code = joinCodeInput ? joinCodeInput.text.Trim() : string.Empty;
+
+            if (string.IsNullOrEmpty(code))
+            {
+                if (joinCodeDisplay) joinCodeDisplay.text = "Join Code を入力してください";
+                SetStatus("Join Code を入力してください。");
+                return;
+            }
+
+            bool success = await RelayManager.Instance.JoinRelayRoom(code);
+
+            if (success)
+            {
+                SetStatus("参加に成功しました。");
+                _uiManager?.OnConnected();
+            }
+            else
+            {
+                if (joinCodeDisplay) joinCodeDisplay.text = "参加に失敗しました";
+                SetStatus("参加できませんでした。コードやネットワークをご確認ください。");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[NetworkUI] Join 失敗: {ex}");
+            if (joinCodeDisplay) joinCodeDisplay.text = "参加に失敗しました";
+            SetStatus("参加中にエラーが発生しました。");
+        }
+        finally
+        {
+            SetInteractable(true);
+        }
+    }
+
+    private void SetInteractable(bool value)
+    {
+        if (hostButton) hostButton.interactable = value;
+        if (joinButton) joinButton.interactable = value;
+        if (joinCodeInput) joinCodeInput.interactable = value;
+    }
+
+    private void SetStatus(string msg)
+    {
+        if (statusText) statusText.text = msg;
+        else Debug.Log($"[NetworkUI] {msg}");
     }
 }
